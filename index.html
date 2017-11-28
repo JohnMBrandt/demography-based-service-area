@@ -38,6 +38,9 @@
 			// Create the map, set it's initial coordinates, and create a base layer
 			var coor = [42.72, -75.3]        
 			var m = L.map('map', {zoomControl:false}).setView(coor, 7);
+			new L.Control.Zoom({position: 'topleft'}).addTo(m);
+
+
 			var mq=L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: 'CartoDB | OSRM'});
 			mq.addTo(m);
 

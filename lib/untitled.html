@@ -1,0 +1,26 @@
+<html>
+	<head>
+
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+		<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+		<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+		<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+		<title> Public Resource Mapper </title>
+	</head>
+	<body>	
+		<script>
+			var map = L.map('map').setView(52.36, 11.5, 4);
+			
+			L.tilelayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png').addTo(map);
+
+			L.Routing.control({
+  				waypoints: [
+    				L.latLng(57.74, 11.94),
+    				L.latLng(57.6792, 11.949)
+  				]
+			}).addTo(map);
+
+		</script>
+	</body>
+</html>
+

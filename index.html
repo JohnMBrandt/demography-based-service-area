@@ -30,8 +30,8 @@
 		<div id="map"></div>
 		<script>
 		
-			var coor = [41, -73]        
-			var m = L.map('map', {zoomControl:false}).setView(coor, 4);
+			var coor = [42.72, -75.3]        
+			var m = L.map('map', {zoomControl:false}).setView(coor, 7);
 
 			var mq=L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png');
 
@@ -49,35 +49,43 @@
 			        startBtn = createButton('Start from this location', container),
 			        destBtn = createButton('Go to this location', container);
 
-		    	L.popup()
+			    L.DomEvent.on(startBtn, 'click', function() {
+        			control.spliceWaypoints(0, 1, e.latlng);
+        			m.closePopup();
+    			});
+
+				L.DomEvent.on(destBtn, 'click', function() {
+        			control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
+        			m.closePopup();
+    			});
+
+    			L.popup()
 			        .setContent(container)
 			        .setLatLng(e.latlng)
 			        .openOn(m);
-
-			    L.DomEvent.on(startBtn, 'click', function() {
-        		control.spliceWaypoints(0, 1, e.latlng);
-        		m.closePopup();
-    			});
-
-					L.DomEvent.on(destBtn, 'click', function() {
-        		control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
-        		m.closePopup();
-    			});
 			});
 
 			var ReversablePlan = L.Routing.Plan.extend({
-    		createGeocoders: function() {
-        	var container = L.Routing.Plan.prototype.createGeocoders.call(this),
-            reverseButton = createButton('↑↓', container);
-        	return container;
+    			createGeocoders: function() {
+        			var container = L.Routing.Plan.prototype.createGeocoders.call(this),
+            			reverseButton = createButton('↑↓', container)
+            		L.DomEvent.on(reverseButton, 'click', function() { 
+            			var waypoints = this.getWaypoints();
+            			this.setWaypoints(waypoints.reverse()); 
+            		}, this);
+
+                	return container;
     		}
 			})
 
-			L.Routing.control({
-  				waypoints: [
-    				L.latLng(41.74, -73.94),
-    				L.latLng(41.6792, -73.949)
-  				]
+			var plan = new ReversablePlan([
+  				L.latLng(),
+  				L.latLng()
+			]),
+			control = L.Routing.control({
+				routeWhileDragging: true,
+				keepCurrentZoomLevel: true,
+				plan: plan
 			}).addTo(m);
 
 			var lc = L.control.locate({

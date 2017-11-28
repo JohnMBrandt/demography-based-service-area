@@ -1,0 +1,96 @@
+<html>
+	<head>
+
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+		<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="https://domoritz.github.io/leaflet-locatecontrol/dist/L.Control.Locate.min.css" />
+		
+	    <script type="text/javascript" src="lib/js/ol.js"></script>
+	    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	    <script type="text/javascript"></script>
+	    <script src="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.js"></script>
+	    <script src="https://unpkg.com/leaflet-geosearch@latest/dist/bundle.min.js"></script>
+	    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js"></script>
+	    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	    <script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js"></script>
+		<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+		<script src="https://domoritz.github.io/leaflet-locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+
+		<title> Public Resource Mapper </title>
+		<style media="screen">
+    		html,body,#map{
+      		width: 99%;
+      		height: 99%;
+    		}
+
+    	</style>
+
+	</head>
+	<body>
+		<div id="map"></div>
+		<script>
+			
+			var coor = [41, -73]        
+			var m = L.map('map', {zoomControl:false}).setView(coor, 4);
+
+			var mq=L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png');
+
+			mq.addTo(m);
+
+			function createButton(label, container) {
+			    var btn = L.DomUtil.create('button', '', container);
+			    btn.setAttribute('type', 'button');
+			    btn.innerHTML = label;
+			    return btn;
+			}
+
+			m.on('click', function(e) {
+			    var container = L.DomUtil.create('div'),
+			        startBtn = createButton('Start from this location', container),
+			        destBtn = createButton('Go to this location', container);
+
+		    	L.popup()
+			        .setContent(container)
+			        .setLatLng(e.latlng)
+			        .openOn(m);
+
+			    L.DomEvent.on(startBtn, 'click', function() {
+        		control.spliceWaypoints(0, 1, e.latlng);
+        		m.closePopup();
+    			});
+
+					L.DomEvent.on(destBtn, 'click', function() {
+        		control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
+        		m.closePopup();
+    			});
+			});
+
+			var ReversablePlan = L.Routing.Plan.extend({
+    		createGeocoders: function() {
+        	var container = L.Routing.Plan.prototype.createGeocoders.call(this),
+            reverseButton = createButton('↑↓', container);
+        	return container;
+    		}
+			})
+
+			L.Routing.control({
+  				waypoints: [
+    				L.latLng(41.74, -73.94),
+    				L.latLng(41.6792, -73.949)
+  				]
+			}).addTo(m);
+
+			var lc = L.control.locate({
+    		position: 'topleft',
+    		showPopup: false,
+    		keepCurrentZoomLevel: true,
+    		strings: {
+        	title: "My Location"
+    		}
+			}).addTo(m);
+
+		</script>
+	</body>
+</html>
+

@@ -6,6 +6,7 @@
 	  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
 	  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 	  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 	  <link rel="stylesheet" href="lib/css/L.Control.Locate.scss" />
 	  <link rel="stylesheet" href="lib/css/L.Control.Basemaps.css"/>
 		
@@ -23,17 +24,85 @@
 
 		<!-- Set the dimensions for the map container -->
 
-		<style media="screen">
-    		html,body,#map{
-      		width: 99%;
-      		height: 99%;
-    		}
-    	</style>
+		<style type="text/css">
+	      body { overflow: hidden; }
+	      .navbar-offset { margin-top: 50px; }
+	      .navbar-brand {margin-right: 5px;}
+	      #map { position: absolute; top: 50px; bottom: 0px; left: 0px; right: 0px; }
+	      #map .ol-zoom { font-size: 1.2em; }
+	      .legend {
+	        line-height: 18px;
+	        color: #555;
+	      }
+	      .legend i {
+	        width: 18px;
+	        height: 18px;
+	        float: left;
+	        margin-right: 8px;
+	        opacity: 0.7;
+	        font-size: 16;
+	      }
+	      .zoom-top-opened-sidebar { margin-top: 5px; }
+	      .zoom-top-collapsed { margin-top: 45px; }
+	      .mini-submenu{
+	        display:none;
+	        background-color: rgba(255, 255, 255, 0.46);
+	        border: 1px solid rgba(0, 0, 0, 0.9);
+	        border-radius: 4px;
+	        padding: 9px;
+	        /*position: relative;*/
+	        width: 42px;
+	        text-align: center;
+	      }
+	      .modal-dialog{
+	        position: absolute;
+	        left: 50%;
+	        margin-left: -242px;
+	        height: 500px;
+	        top: 50%;
+	        margin-top: -150px;
+	        width: 35%;
+	      }
+	      .mini-submenu-left {
+	        position: absolute;
+	        top: 60px;
+	        left: .5em;
+	        z-index: 40;
+	      }
+	      #map { z-index: 35; }
+	      .sidebar { z-index: 45; width: 275px; }
+	      .main-row { position: relative; top: 0; }
+	      .mini-submenu:hover{
+	        cursor: pointer;
+	      }
+	      .slide-submenu{
+	        background: rgba(0, 0, 0, 0.45);
+	        display: inline-block;
+	        padding: 0 8px;
+	        border-radius: 4px;
+	        cursor: pointer;
+	      }
+	      h4 {
+	        text-align: left;
+	      }
+    </style>
+
 	</head>
 
 	<body>
-		<div id="map"></div>
-
+	  <div class="container">
+      <nav class="navbar navbar-fixed-top navbar-default" role="navigation">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand">Public Resource Mapper: click anywhere to begin or toggle location under zoom button
+            </a>
+          </div>
+         </div> 
+      </nav>
+      <div class="navbar-offset"></div>
+      <div id="map">
+      </div>
+    </div>
 		<script>
 		
 			// Begin javascript to define the interactive map

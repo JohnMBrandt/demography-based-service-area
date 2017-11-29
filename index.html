@@ -7,14 +7,17 @@
 	  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 	  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	  <link rel="stylesheet" href="lib/css/L.Control.Locate.scss" />
+	  <link rel="stylesheet" href="lib/css/L.Control.Basemaps.css"/>
 		
 	  <script type="text/javascript" src="lib/js/ol.js"></script>
 	  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	  <script src="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.js"></script>
+	  <script src="lib/leaflet.ajax.js"></script>
 	  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	  <script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js"></script>
 	  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 	  <script src="lib/js/L.Control.Locate.min.js"></script>
+	  <script src="lib/js/L.Control.Basemaps.js"></script>
 
 		<title> Public Resource Mapper </title>
 
@@ -41,8 +44,23 @@
 			new L.Control.Zoom({position: 'topleft'}).addTo(m);
 
 
-			var mq=L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: 'CartoDB | OSRM'});
-			mq.addTo(m);
+			var basemaps = [
+			  L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', 
+			    {minZoom:3
+			  }),
+			  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+			  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+			  minZoom:3
+			  }),
+			  ];
+
+			m.addControl(L.control.basemaps({
+			  position: "bottomleft",
+			  basemaps: basemaps,
+			  tileX: 0,
+			  tileY: 0,
+			  tileZ: 1
+			}));
 
 			// Create a function that creates a button
 			function createButton(label, container) {
@@ -115,6 +133,24 @@
     			strings: {
         		title: "My Location"
     		}}).addTo(m);
+
+
+			function statesstyle(feature) {
+			    return {
+			        fill: false,
+			        weight: 1,
+			        opacity: 1,
+			        color: 'black',
+			        dashArray: '',
+			        fillOpacity: 0.7
+			    }
+			};
+
+			style = function(feature){
+				states.setStyle(statesstyle);
+			}
+
+			var states = new L.GeoJSON.AJAX(["includes/usstates.geojson"], {style: style}).addTo(m);
 
 		</script>
 	</body>

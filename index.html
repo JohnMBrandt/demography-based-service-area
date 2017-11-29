@@ -114,6 +114,9 @@
 
 
 			var basemaps = [
+			  L.tileLayer('http://a.tile.openstreetmap.org/{z}/{x}/{y}.png ', 
+			    {minZoom:3
+			  }),
 			  L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', 
 			    {minZoom:3
 			  }),

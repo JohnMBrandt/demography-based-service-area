@@ -118,7 +118,7 @@
 			  	attribution: "CartoDB",
 			  	minZoom:3
 			  }),
-			  L.tileLayer('http://a.tile.openstreetmap.org/{z}/{x}/{y}.png ', {
+			  L.tileLayer('https://a.tile.openstreetmap.org/{z}/{x}/{y}.png ', {
 			  	attribution: "Open Street Map",
 			  	minZoom:3
 			  }),
@@ -211,6 +211,13 @@
     		}}).addTo(m);*/
 
 
+
+
+
+
+
+
+
 			function statesstyle(feature) {
 			    return {
 			        fill: false,
@@ -235,6 +242,17 @@
 				fillOpacity: 0.6
 			};
 
+			var wic_lcations = new L.GeoJSON.AJAX(["includes/wic_locations.geojson"], {/*onEachFeature: onEachFeature,*/ pointToLayer: function(feature, latlng) {
+					return L.circleMarker(latlng, geojsonMarkerOptions);}}).addTo(m);
+
+
+
+
+
+
+
+
+
 			
 
 			function onLocationFound(e) {
@@ -249,7 +267,6 @@
 		         alert(e.message);
 		    }
 
-
 			window.onload = function getLocationLeaflet() {
          		m.on('locationfound', onLocationFound);
          		m.on('locationerror', onLocationError);
@@ -257,37 +274,7 @@
 
 
 
-         	console.log(location);
 
-
-			/*function onEachFeature(feature, layer) {
-				var container = L.DomUtil.create('div'),aw
-			        startBtn = createButton('Start from this location', container),
-			        destBtn = createButton('Go to this location', container);
-
-			    /* when clicking the "start" button, splice the waypoints - 
-			    aka remove the first (start) waypoitn and replace it with the current lat/long
-			    then close the pop-up *//*
-			    L.DomEvent.on(startBtn, 'click', function() {
-        			control.spliceWaypoints(0, 1, e.latlng);
-        			m.closePopup();
-    			});*/
-
-			   /* when clicking the "finish" button, splice the waypoints -
-			   aka remove the second (destination) waypoint and replace it with the current lat/long
-			   then close the pop-up */ /*
-				L.DomEvent.on(destBtn, 'click', function() {
-        			control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
-        			m.closePopup();
-    			});
-				// set the popup content to that defined above
-				// with a location of the current click lat/long
-
-				layer.bindPopup(container);
-			}*/
-
-			var wic_lcations = new L.GeoJSON.AJAX(["includes/wic_locations.geojson"], {/*onEachFeature: onEachFeature,*/ pointToLayer: function(feature, latlng) {
-					return L.circleMarker(latlng, geojsonMarkerOptions);}}).addTo(m);
 
 		</script>
 	</body>

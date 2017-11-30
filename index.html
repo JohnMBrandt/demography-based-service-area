@@ -149,16 +149,16 @@
 			and create two buttons, a "start" and a "destination" button */
 			m.on('click', function locationfunction(e) {
 			    var container = L.DomUtil.create('div'),
-			        startBtn = createButton('Start from this location', container),
+			        // startBtn = createButton('Start from this location', container),
 			        destBtn = createButton('Go to this location', container);
 
 			    /* when clicking the "start" button, splice the waypoints - 
 			    aka remove the first (start) waypoitn and replace it with the current lat/long
 			    then close the pop-up */
-			    L.DomEvent.on(startBtn, 'click', function() {
+			    /*L.DomEvent.on(startBtn, 'click', function() {
         			control.spliceWaypoints(0, 1, e.latlng);
         			m.closePopup();
-    			});
+    			});*/
 
 			   /* when clicking the "finish" button, splice the waypoints -
 			   aka remove the second (destination) waypoint and replace it with the current lat/long
@@ -213,11 +213,6 @@
 
 
 
-
-
-
-
-
 			function statesstyle(feature) {
 			    return {
 			        fill: false,
@@ -243,24 +238,15 @@
 			};
 
 			var wic_lcations = new L.GeoJSON.AJAX(["includes/wic_locations.geojson"], {/*onEachFeature: onEachFeature,*/ pointToLayer: function(feature, latlng) {
-					return L.circleMarker(latlng, geojsonMarkerOptions);}}).addTo(m);
-
-
-
-
-
-
-
-
-
-			
-
+					return L.circleMarker(latlng, geojsonMarkerOptions);}}).addTo(m)
+				
 			function onLocationFound(e) {
 		         var radius = e.accuracy / 2;
-		         var location = e.latlng;
-		         L.marker(location).addTo(m)
-		         
-		         L.circle(location, radius).addTo(m);
+		         cur_location = e.latlng;
+		         L.marker(cur_location).addTo(m)
+		      
+		         L.circle(cur_location, radius).addTo(m);
+        		 control.spliceWaypoints(0, 1, cur_location);
 		    }
 
 		    function onLocationError(e) {
@@ -271,9 +257,6 @@
          		m.on('locationfound', onLocationFound);
          		m.on('locationerror', onLocationError);
          		m.locate({setView: true, maxZoom: 7});}
-
-
-
 
 
 		</script>

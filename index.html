@@ -147,7 +147,7 @@
 
 			/* On mouse click, call the createButton function
 			and create two buttons, a "start" and a "destination" button */
-			m.on('click', function(e) {
+			m.on('click', function locationfunction(e) {
 			    var container = L.DomUtil.create('div'),
 			        startBtn = createButton('Start from this location', container),
 			        destBtn = createButton('Go to this location', container);
@@ -202,13 +202,13 @@
 			}).addTo(m);
 
 			// create a control layer that sets the map-view to the user's current location
-			var lc = L.control.locate({
+			/*var lc = L.control.locate({
     			position: 'topleft',
     			showPopup: false,
     			keepCurrentZoomLevel: true,
     			strings: {
         		title: "My Location"
-    		}}).addTo(m);
+    		}}).addTo(m);*/
 
 
 			function statesstyle(feature) {
@@ -227,6 +227,67 @@
 			}
 
 			var states = new L.GeoJSON.AJAX(["includes/usstates.geojson"], {style: style}).addTo(m);
+
+			var geojsonMarkerOptions = {
+				radius: 6,
+				weight: 1,
+				opacity: 1,
+				fillOpacity: 0.6
+			};
+
+			
+
+			function onLocationFound(e) {
+		         var radius = e.accuracy / 2;
+		         var location = e.latlng;
+		         L.marker(location).addTo(m)
+		         
+		         L.circle(location, radius).addTo(m);
+		    }
+
+		    function onLocationError(e) {
+		         alert(e.message);
+		    }
+
+
+			window.onload = function getLocationLeaflet() {
+         		m.on('locationfound', onLocationFound);
+         		m.on('locationerror', onLocationError);
+         		m.locate({setView: true, maxZoom: 7});}
+
+
+
+         	console.log(location);
+
+
+			/*function onEachFeature(feature, layer) {
+				var container = L.DomUtil.create('div'),aw
+			        startBtn = createButton('Start from this location', container),
+			        destBtn = createButton('Go to this location', container);
+
+			    /* when clicking the "start" button, splice the waypoints - 
+			    aka remove the first (start) waypoitn and replace it with the current lat/long
+			    then close the pop-up *//*
+			    L.DomEvent.on(startBtn, 'click', function() {
+        			control.spliceWaypoints(0, 1, e.latlng);
+        			m.closePopup();
+    			});*/
+
+			   /* when clicking the "finish" button, splice the waypoints -
+			   aka remove the second (destination) waypoint and replace it with the current lat/long
+			   then close the pop-up */ /*
+				L.DomEvent.on(destBtn, 'click', function() {
+        			control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
+        			m.closePopup();
+    			});
+				// set the popup content to that defined above
+				// with a location of the current click lat/long
+
+				layer.bindPopup(container);
+			}*/
+
+			var wic_lcations = new L.GeoJSON.AJAX(["includes/wic_locations.geojson"], {/*onEachFeature: onEachFeature,*/ pointToLayer: function(feature, latlng) {
+					return L.circleMarker(latlng, geojsonMarkerOptions);}}).addTo(m);
 
 		</script>
 	</body>

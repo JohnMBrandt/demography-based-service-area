@@ -145,9 +145,19 @@
 			    return btn;
 			}
 
+			function oneachfeature(feature, layer) {
+				layer.bindPopup(destBtn = createButton('Go to this location'), L.DomUtil.create('div'))
+				L.DomEvent.on(destBtn, 'click', function() {
+					control.spliceWaypoints(control.getWaypoints().length - 1, 1, [feature.properties.Lat, feature.properties.Long]);
+					m.closePopup();
+				})
+			}
+
 			/* On mouse click, call the createButton function
 			and create two buttons, a "start" and a "destination" button */
-			m.on('click', function locationfunction(e) {
+			
+
+			/*m.on('click', function locationfunction(e) {
 			    var container = L.DomUtil.create('div'),
 			        // startBtn = createButton('Start from this location', container),
 			        destBtn = createButton('Go to this location', container);
@@ -162,7 +172,7 @@
 
 			   /* when clicking the "finish" button, splice the waypoints -
 			   aka remove the second (destination) waypoint and replace it with the current lat/long
-			   then close the pop-up */
+			   then close the pop-up */ /*
 				L.DomEvent.on(destBtn, 'click', function() {
         			control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
         			m.closePopup();
@@ -173,7 +183,7 @@
 			        .setContent(container)
 			        .setLatLng(e.latlng)
 			        .openOn(m);
-			});
+			});*/
 
 			var ReversablePlan = L.Routing.Plan.extend({
     			createGeocoders: function() {
@@ -237,7 +247,7 @@
 				fillOpacity: 0.6
 			};
 
-			var wic_lcations = new L.GeoJSON.AJAX(["includes/wic_locations.geojson"], {/*onEachFeature: onEachFeature,*/ pointToLayer: function(feature, latlng) {
+			var wic_lcations = new L.GeoJSON.AJAX(["includes/wic_locations.geojson"], {onEachFeature: oneachfeature, pointToLayer: function(feature, latlng) {
 					return L.circleMarker(latlng, geojsonMarkerOptions);}}).addTo(m)
 				
 			function onLocationFound(e) {

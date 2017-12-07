@@ -1,10 +1,4 @@
 '''
-I am not using any raster files for my final project so I focused on my data instead. I was going to do both
-but I ended up spending > 20 hours trying to get this script to work. Currently, the script should work, but 
-I cannot get it to work with the data I'm using for my final project. Even after hours and hours of trying.
-
-
-
 This script takes the following inputs:
 
 NetworkRoad = a network layer
@@ -57,21 +51,7 @@ try:
 	arcpy.na.BuildNetwork(in_network_dataset=NetworkRoad)
 
 	# Calculate locations of points within the network
-	arcpy.na.CalculateLocations(in_point_features=Facility,
-                            in_network_dataset=NetworkRoad,
-                            search_tolerance="5000 Meters",
-                            search_criteria="StreetSegment SHAPE;StreetSegment_ND_Junctions SHAPE",
-                            match_type="MATCH_TO_CLOSEST",
-                            source_ID_field="SourceID",
-                            source_OID_field="SourceOID",
-                            position_field="PosAlong",
-                            side_field="SideOfEdge",
-                            snap_X_field="SnapX",
-                            snap_Y_field="SnapY",
-                            distance_field="Distance",
-                            snap_Z_field="",
-                            location_field="",
-                            exclude_restricted_elements="INCLUDE")
+
 
 	# Service area calculation
 	arcpy.na.MakeServiceAreaLayer(in_network_dataset=NetworkRoad,
@@ -92,6 +72,30 @@ try:
                                 poly_trim_value="100 Meters",
                                 lines_source_fields="NO_LINES_SOURCE_FIELDS",
                                 hierarchy="NO_HIERARCHY", time_of_day="")
+
+    FacilitiesLayer = arcpy.na.GetNAClassNames(outLayerName.getOutput(0))["Facilities"]
+
+    arcpy.na.AddLocations(outLayerName, FacilitiesLayer, Facility, "", "")
+
+    arcpy.na.CalculateLocations(in_point_features=Facility,
+                            in_network_dataset=outLayerName,
+                            search_tolerance="5000 Meters",
+                            search_criteria="StreetSegment SHAPE;StreetSegment_ND_Junctions SHAPE",
+                            match_type="MATCH_TO_CLOSEST",
+                            source_ID_field="SourceID",
+                            source_OID_field="SourceOID",
+                            position_field="PosAlong",
+                            side_field="SideOfEdge",
+                            snap_X_field="SnapX",
+                            snap_Y_field="SnapY",
+                            distance_field="Distance",
+                            snap_Z_field="",
+                            location_field="",
+                            exclude_restricted_elements="INCLUDE")
+
+    arcpy.na.Solve(outLayerName)
+
+    arcpy.management.SaveToLayerFile(outLayerName, outLayerFile, "Relative")
 
 
 	# Calculate the intersection between the service area and census layer

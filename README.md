@@ -10,6 +10,7 @@ This web-mapping application allows users to:
 
 * include public resource locations (WIC, after-school programs, mental-health centers, planned parenthood, abortion clinics)
 * Create a navigation bar for users to change elements of the map
+* include service area for each facility location
 * Provide links upon route creation to a google maps route that the user could then transfer to their phone
   
 ## References

@@ -10,12 +10,12 @@ outLayerName = name of service area layer (.lyr)
 outputJoined = output layer (.shp)
 
 The goal of the script is to:
-	a) Calculate service area polygons for inputed facilities
-	b) Calculate area of resulting service area within each census polygon
+    a) Calculate service area polygons for inputed facilities
+    b) Calculate area of resulting service area within each census polygon
 
 This script can be combined with Brandt,John,09.py to calculate:
-	a) the percentage of each census polygon with service to a facility
-	b) the ranking of counties in the census feature class with regards to percent service coverage
+    a) the percentage of each census polygon with service to a facility
+    b) the ranking of counties in the census feature class with regards to percent service coverage
 
 '''
 
@@ -26,38 +26,36 @@ from arcpy.sa import *
 
 
 try:
-	# Check out the necessary extensions
-	arcpy.CheckOutExtension("Network")
-	arcpy.CheckOutExtension("Spatial")
+    # Check out the necessary extensions
+    arcpy.CheckOutExtension("Network")
+    arcpy.CheckOutExtension("Spatial")
+    # Set environment & output settings
+    env.workspace = "C:\Users\John\Desktop\GIS Final"
+    env.overwriteOutput = True
 
- 	# Set environment & output settings
-	env.workspace = "C:\Users\John\Desktop\GIS Final"
-	env.overwriteOutput = True
+    # Set input and output variables
+    NetworkRoad = arcpy.GetParameterAsText(0)
+    Facility = arcpy.GetParameterAsText(1)
+    ServiceAreaRadius = arcpy.GetParameterAsText(2)
+    CensusLayer = arcpy.GetParameterAsText(3)
 
-	# Set input and output variables
-	NetworkRoad = arcpy.GetParameterAsText(0)
-	Facility = arcpy.GetParameterAsText(1)
-	ServiceAreaRadius = arcpy.GetParameterAsText(2)
-	CensusLayer = arcpy.GetParameterAsText(3)
+    outLayerFile = arcpy.GetParameterAsText(4)
+    outputJoined = arcpy.GetParameterAsText(5)
 
-	outLayerName = arcpy.GetParameterAsText(4)
-	outputJoined = arcpy.GetParameterAsText(5)
-
-	arcpy.AddMessage('\n' + "The network road input shapefile name is: " +NetworkRoad+'\n')
-
-
-	# Build the network dataset
-	arcpy.na.BuildNetwork(in_network_dataset=NetworkRoad)
-
-	# Calculate locations of points within the network
+    arcpy.AddMessage('\n' + "The network road input shapefile name is: " +NetworkRoad+'\n')
 
 
-	# Service area calculation
-	arcpy.na.MakeServiceAreaLayer(in_network_dataset=NetworkRoad,
-                                out_network_analysis_layer = outLayerName,
+    # Build the network dataset
+    arcpy.na.BuildNetwork(in_network_dataset=NetworkRoad)
+
+    # Calculate locations of points within the network
+
+
+    # Create a service area layer
+    outLayerName = arcpy.na.MakeServiceAreaLayer(in_network_dataset=NetworkRoad,
                                 impedance_attribute="Length",
                                 travel_from_to="TRAVEL_FROM",
-                                default_break_values="1 5 10 15 20 25 30",
+                                default_break_values="1500 5000 10000",
                                 polygon_type="SIMPLE_POLYS",
                                 merge="NO_MERGE",
                                 nesting_type="RINGS",
@@ -72,52 +70,54 @@ try:
                                 lines_source_fields="NO_LINES_SOURCE_FIELDS",
                                 hierarchy="NO_HIERARCHY", time_of_day="")
 
-    FacilitiesLayer = arcpy.na.GetNAClassNames(outLayerName.getOutput(0))["Facilities"]
 
+    # Get the output of the service layer
+    FacilitiesInterim = outLayerName.getOutput(0)
+
+    # Create a variable referencing the list of sublayers of the service area layer
+    naClasses = arcpy.na.GetNAClassNames(FacilitiesInterim)
+
+    # Create a variable storing the name of the sublayer containing the facilities
+    FacilitiesLayer = arcpy.na.GetNAClassNames(FacilitiesInterim)["Facilities"]
+
+    # Add the shapefile of locations to the service area layer
     arcpy.na.AddLocations(outLayerName, FacilitiesLayer, Facility, "", "")
 
-    arcpy.na.CalculateLocations(in_point_features=Facility,
-                            in_network_dataset=outLayerName,
-                            search_tolerance="5000 Meters",
-                            search_criteria="StreetSegment SHAPE;StreetSegment_ND_Junctions SHAPE",
-                            match_type="MATCH_TO_CLOSEST",
-                            source_ID_field="SourceID",
-                            source_OID_field="SourceOID",
-                            position_field="PosAlong",
-                            side_field="SideOfEdge",
-                            snap_X_field="SnapX",
-                            snap_Y_field="SnapY",
-                            distance_field="Distance",
-                            snap_Z_field="",
-                            location_field="",
-                            exclude_restricted_elements="INCLUDE")
-
+    # Solve the service area
     arcpy.na.Solve(outLayerName)
 
-    arcpy.management.SaveToLayerFile(outLayerName, outLayerFile, "Relative")
+    # Use arcpy mapping and the naClasses variable we defined above to create a variable
+    # storing the polygons sublayer
+    polygonsSubLayer = arcpy.mapping.ListLayers(FacilitiesInterim, naClasses["SAPolygons"])[0]
 
+    # Copy the polygons sublayer to the disk, as a shapefile
+    arcpy.CopyFeatures_management(polygonsSubLayer, outLayerFile)
 
-	# Calculate the intersection between the service area and census layer
-	intersected = arcpy.Intersect_analysis(
-	    in_features="C:/Users/John/Desktop/GIS Final/"  + outLayerName + "/Polygons #;" + CensusLayer+ " #",
-	    join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
+    # Calculate the intersection between the service area and the census layer
+    intersected = arcpy.Intersect_analysis([outLayerFile, CensusLayer],
+        join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
 
-	# Dissolve the borders between service areas within each census polygon
-	dissolved = arcpy.Dissolve_management(in_features=intersected,
-                                       dissolve_field="NAME_1",
+    # Calculate the intersection between the service area and census layer
+    '''intersected = arcpy.Intersect_analysis(
+        in_features=outLayerName + "/Polygons #;" + CensusLayer+ " #",
+        join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")'''
+
+    # Dissolve the borders between service areas within each census polygon
+    dissolved = arcpy.Dissolve_management(in_features=intersected,
+                                       dissolve_field="NAsME_1",
                                        statistics_fields="",
                                        multi_part="MULTI_PART",
                                        unsplit_lines="DISSOLVE_LINES")
-	
-	# Calculate the area of the dissolved polygons within each census polygon
-	dissolve_area = arcpy.AddGeometryAttributes_management(Input_Features = dissolved,
+
+    # Calculate the area of the dissolved polygons within each census polygon
+    dissolve_area = arcpy.AddGeometryAttributes_management(Input_Features = dissolved,
                                                         Geometry_Properties="AREA_GEODESIC",
                                                         Length_Unit="",
                                                         Area_Unit="SQUARE_MILES_US",
                                                         Coordinate_System="")
 
-	# Join the layer containing the area of the dissolved polygons to the census layer
-	arcpy.SpatialJoin_analysis(target_features=CensusLayer,
+    # Join the layer containing the area of the dissolved polygons to the census layer
+    arcpy.SpatialJoin_analysis(target_features=CensusLayer,
                         join_features=dissolve_area,
                         out_feature_class = outputJoined,
                         join_operation="JOIN_ONE_TO_ONE",
@@ -126,15 +126,16 @@ try:
                         search_radius="",
                         distance_field_name="")
 
-	# When done, turn off the Spatial Analysis and Network Analysis Extensions
-	arcpy.CheckInExtension("Network")
-	arcpy.CheckInExtension("Spatial")
+
+    # When done, turn off the Spatial Analysis and Network Analysis Extensions
+    arcpy.CheckInExtension("Network")
+    arcpy.CheckInExtension("Spatial")
 
 
 # If the above script fails, report an error
-# - as adopted from Dana Tomlin's Resources for GSD - 
+# - as adopted from Dana Tomlin's Resources for GSD -
 
 except Exception as e:
-	arcpy.AddError('\n' + "Script failed because: \t\t" + e.message )
-	exceptionreport = sys.exc_info()[2]
-	arcpy.AddError("at this location: \n\n" + traceback.format_tb(exceptionreport)[0]+ "\n")
+    arcpy.AddError('\n' + "Script failed because: \t\t" + e.message )
+    exceptionreport = sys.exc_info()[2]
+    arcpy.AddError("at this location: \n\n" + traceback.format_tb(exceptionreport)[0]+ "\n")

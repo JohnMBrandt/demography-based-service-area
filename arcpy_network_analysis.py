@@ -40,7 +40,6 @@ try:
 	ServiceAreaRadius = arcpy.GetParameterAsText(2)
 	CensusLayer = arcpy.GetParameterAsText(3)
 
-
 	outLayerName = arcpy.GetParameterAsText(4)
 	outputJoined = arcpy.GetParameterAsText(5)
 
@@ -104,7 +103,7 @@ try:
 	    join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
 
 	# Dissolve the borders between service areas within each census polygon
-	dissolved = arcpy.Dissolve_management(in_features= intersected,
+	dissolved = arcpy.Dissolve_management(in_features=intersected,
                                        dissolve_field="NAME_1",
                                        statistics_fields="",
                                        multi_part="MULTI_PART",

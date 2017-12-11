@@ -1,16 +1,18 @@
 '''
 This script takes the following inputs:
 
-NetworkRoad = a network layer
-Facility = a shapefile/feature class containing point locations of facilities
+NetworkRoad       = a network layer
+Facility          = a shapefile/feature class containing point locations of facilities
 ServiceAreaRadius = how many miles to calculate service area
-CensusLayer = a polygon feature class/shapefile/geojson of census data (county/block)
+CensusLayer       = a polygon feature class/shapefile/geojson of census data (county/block)
+DissolveField     = field, within the Census layer, that differentiates between polygons, preferably an FID
 
-outLayerName = name of service area layer (.lyr)
-outputJoined = output layer (.shp)
+outLayerFile      = name of service area layer (.shp)
+outputDissolved   = dissolved surface area layer (.shp)
+outputJoined      = final output latyer (.shp)
 
 The goal of the script is to:
-    a) Calculate service area polygons for inputed facilities
+    a) Calculate service area polygons for facilities
     b) Calculate area of resulting service area within each census polygon
 
 This script can be combined with Brandt,John,09.py to calculate:
@@ -29,18 +31,22 @@ try:
     # Check out the necessary extensions
     arcpy.CheckOutExtension("Network")
     arcpy.CheckOutExtension("Spatial")
+
     # Set environment & output settings
     env.workspace = "C:\Users\John\Desktop\GIS Final"
     env.overwriteOutput = True
 
-    # Set input and output variables
+    # Set input variables
     NetworkRoad = arcpy.GetParameterAsText(0)
     Facility = arcpy.GetParameterAsText(1)
     ServiceAreaRadius = arcpy.GetParameterAsText(2)
     CensusLayer = arcpy.GetParameterAsText(3)
+    DissolveField = arcpy.GetParameterAsText(4)
 
-    outLayerFile = arcpy.GetParameterAsText(4)
-    outputJoined = arcpy.GetParameterAsText(5)
+    # Set output variables
+    outLayerFile = arcpy.GetParameterAsText(5)
+    outputDissolved = arcpy.GetParameterAsText(6)
+    outputJoined = arcpy.GetParameterAsText(7)
 
     arcpy.AddMessage('\n' + "The network road input shapefile name is: " +NetworkRoad+'\n')
 
@@ -55,7 +61,7 @@ try:
     outLayerName = arcpy.na.MakeServiceAreaLayer(in_network_dataset=NetworkRoad,
                                 impedance_attribute="Length",
                                 travel_from_to="TRAVEL_FROM",
-                                default_break_values="1500 5000 10000",
+                                default_break_values="20000",
                                 polygon_type="SIMPLE_POLYS",
                                 merge="NO_MERGE",
                                 nesting_type="RINGS",
@@ -91,6 +97,7 @@ try:
     polygonsSubLayer = arcpy.mapping.ListLayers(FacilitiesInterim, naClasses["SAPolygons"])[0]
 
     # Copy the polygons sublayer to the disk, as a shapefile
+    arcpy.AddMessage('\n' + "The service area output shapefile name is: " + outLayerFile + '\n')
     arcpy.CopyFeatures_management(polygonsSubLayer, outLayerFile)
 
     # Calculate the intersection between the service area and the census layer
@@ -104,10 +111,14 @@ try:
 
     # Dissolve the borders between service areas within each census polygon
     dissolved = arcpy.Dissolve_management(in_features=intersected,
-                                       dissolve_field="NAsME_1",
+                                       dissolve_field=DissolveField,
                                        statistics_fields="",
                                        multi_part="MULTI_PART",
                                        unsplit_lines="DISSOLVE_LINES")
+
+    # Export the dissolved shapefile to the disk
+    arcpy.AddMessage('\n' + "The dissolved shapefile name is: " + outputDissolved + '\n')
+    arcpy.CopyFeatures_management(dissolved, outputDissolved)
 
     # Calculate the area of the dissolved polygons within each census polygon
     dissolve_area = arcpy.AddGeometryAttributes_management(Input_Features = dissolved,

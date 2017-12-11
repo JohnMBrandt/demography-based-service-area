@@ -72,7 +72,7 @@ try:
                                 UTurn_policy="ALLOW_UTURNS",
                                 restriction_attribute_name="Oneway",
                                 polygon_trim="TRIM_POLYS",
-                                poly_trim_value="100 Meters",
+                                poly_trim_value="250 Meters",
                                 lines_source_fields="NO_LINES_SOURCE_FIELDS",
                                 hierarchy="NO_HIERARCHY", time_of_day="")
 
@@ -97,31 +97,26 @@ try:
     polygonsSubLayer = arcpy.mapping.ListLayers(FacilitiesInterim, naClasses["SAPolygons"])[0]
 
     # Copy the polygons sublayer to the disk, as a shapefile
-    arcpy.AddMessage('\n' + "The service area output shapefile name is: " + outLayerFile + '\n')
     arcpy.CopyFeatures_management(polygonsSubLayer, outLayerFile)
 
     # Calculate the intersection between the service area and the census layer
-    intersected = arcpy.Intersect_analysis([outLayerFile, CensusLayer],
-        join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
 
-    # Calculate the intersection between the service area and census layer
-    '''intersected = arcpy.Intersect_analysis(
-        in_features=outLayerName + "/Polygons #;" + CensusLayer+ " #",
-        join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")'''
 
     # Dissolve the borders between service areas within each census polygon
-    dissolved = arcpy.Dissolve_management(in_features=intersected,
-                                       dissolve_field=DissolveField,
+    dissolved = arcpy.Dissolve_management(in_features=outLayerFile,
+                                       dissolve_field="FromBreak",
                                        statistics_fields="",
                                        multi_part="MULTI_PART",
                                        unsplit_lines="DISSOLVE_LINES")
 
+    intersected = arcpy.Intersect_analysis([dissolved, CensusLayer],
+                                           join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
+
     # Export the dissolved shapefile to the disk
-    arcpy.AddMessage('\n' + "The dissolved shapefile name is: " + outputDissolved + '\n')
     arcpy.CopyFeatures_management(dissolved, outputDissolved)
 
     # Calculate the area of the dissolved polygons within each census polygon
-    dissolve_area = arcpy.AddGeometryAttributes_management(Input_Features = dissolved,
+    intersected_area = arcpy.AddGeometryAttributes_management(Input_Features = intersected,
                                                         Geometry_Properties="AREA_GEODESIC",
                                                         Length_Unit="",
                                                         Area_Unit="SQUARE_MILES_US",
@@ -129,7 +124,7 @@ try:
 
     # Join the layer containing the area of the dissolved polygons to the census layer
     arcpy.SpatialJoin_analysis(target_features=CensusLayer,
-                        join_features=dissolve_area,
+                        join_features=intersected_area,
                         out_feature_class = outputJoined,
                         join_operation="JOIN_ONE_TO_ONE",
                         join_type="KEEP_ALL",

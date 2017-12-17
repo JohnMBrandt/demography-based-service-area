@@ -27,32 +27,47 @@ try:
 
 
     # Set input variables
-    input_part_2 = arcpy.GetParameterAsText(0)
-    input_census_file = arcpy.GetParameterAsText(1)
+    input_part_2 = arcpy.GetParameterAsText(0) # input shapefile
+    input_census_file = arcpy.GetParameterAsText(1) # input census file
     arcpy.AddMessage('\n' + "The input shapefiles are" + input_part_2 + input_census_file)
 
     # User input of field to be normalized by area
-    serviced_regions = arcpy.GetParameterAsText(2)
-    total_regions    = arcpy.GetParameterAsText(3)
+    percent_coverage = arcpy.GetParameterAsText(2) # percent coverage
 
-    dissolve_field   = arcpy.GetParameterAsText(4)
+    perc_calc = arcpy.GetParameterAsText(3) #output - service area % * census value
+    total_regions    = arcpy.GetParameterAsText(4) # census input data
+
+    dissolve_field   = arcpy.GetParameterAsText(5) # county FID
 
     # User input of field to contain the calculated data
-    OutputField      = arcpy.GetParameterAsText(5)
+    OutputField      = arcpy.GetParameterAsText(6)
     arcpy.AddMessage("The name of the field to be added is " + OutputField + "\n")
 
     # User input of location to save output shapefile
-    OutputShapeFile  = arcpy.GetParameterAsText(6)
+    OutputShapeFile  = arcpy.GetParameterAsText(7)
     arcpy.AddMessage('\n' + "The output shapefile is" + OutputShapeFile)
 
 
+    arcpy.AddField_management(input_part_2, perc_calc, "DOUBLE", 20, 5)
+
+    ShpRecords_calc_number = arcpy.UpdateCursor(input_part_2)
+
+    for record in ShpRecords_calc_number:
+        census_value = record.getValue(total_regions)
+        percent_coverage_value = record.getValue(percent_coverage)
+        result = census_value * percent_coverage_value
+        record.setValue(perc_calc, result)
+        ShpRecords_calc_number.updateRow(record)
+
+    del ShpRecords_calc_number
+    del record
 
     outPutIntersect = arcpy.Intersect_analysis([input_part_2, input_census_file],
                              join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
 
     dissolved = arcpy.Dissolve_management(in_features=outPutIntersect,
                               out_feature_class=OutputShapeFile,
-                              dissolve_field=dissolve_field, statistics_fields=total_regions + " SUM;" + serviced_regions + " SUM",
+                              dissolve_field=dissolve_field, statistics_fields=total_regions + " SUM;" + perc_calc + " SUM",
                               multi_part="MULTI_PART", unsplit_lines="DISSOLVE_LINES")
 
 
@@ -74,7 +89,7 @@ try:
     for record in ShpRecords:
         # Get the value of the data in the column to be normalzied
 
-        serv_field = "SUM_" + serviced_regions[:6]
+        serv_field = "SUM_" + perc_calc[:6]
         tot_field = "SUM_" + total_regions[:6]
         arcpy.AddMessage(tot_field)
 

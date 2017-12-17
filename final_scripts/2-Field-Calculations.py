@@ -29,7 +29,7 @@ try:
     census_area = arcpy.GetParameterAsText(2)
 
     arcpy.AddMessage('\n' + "The input shapefile is" + input_shapefile + ", and"
-        + service_area " and " + census_area + "are the input fields.")
+        + service_area +  " and " + census_area + "are the input fields.")
     
     # Set output variables
     output_field = arcpy.GetParameterAsText(3)

@@ -1,27 +1,45 @@
 '''
-This script takes the following inputs:
-
-NetworkRoad       = a network layer
-Facility          = a shapefile/feature class containing point locations of facilities
-ServiceAreaRadius = how many miles to calculate service area
-CensusLayer       = a polygon feature class/shapefile/geojson of census data (county/block)
-DissolveField     = field, within the Census layer, that differentiates between polygons, preferably an FID
-
-outLayerFile      = name of service area layer (.shp)
-outputDissolved   = dissolved surface area layer (.shp)
-outputJoined      = final output latyer (.shp)
-
-The goal of the script is to:
-    a) Calculate service area polygons for facilities
-    b) Calculate area of resulting service area within each census polygon
-
-This script can be combined with Brandt,John,09.py to calculate:
-    a) the percentage of each census polygon with service to a facility
-    b) the ranking of counties in the census feature class with regards to percent service coverage
-
+---------------------------------------------------------------------------------------------------------
+| Part 1 of 3 of the census-based service area calculator.                                              |
+| To use this toolkit, you will need a network layer of roads, a feature class of facility locations,   |
+| census block level demographic data, and a shapefile of the counties encompassing the facilities.     |
+|                                                                                                       |
+| This script takes the following inputs:                                                               |
+|                                                                                                       |
+| NetworkRoad       = a network layer                                                                   |
+| Facility          = a feature class containing point locations of facilities                          |
+| ServiceAreaRadius = how many miles to calculate service area                                          |
+| CensusLayer       = a polygon feature class/shapefile/geojson of census block data                    |
+| DissolveField     = census layer field that differentiates between polygons, preferably an FID        |
+|                                                                                                       |
+| outLayerFile      = name of service area layer (.shp)                                                 |
+| outputDissolved   = dissolved surface area layer (.shp)                                               |
+| outputJoined      = final output layer (.shp)                                                         |
+|                                                                                                       |
+| The goal of the script is to:                                                                         |
+|    a) Calculate service area polygons for facilities                                                  |
+|    b) Calculate area of resulting service area within each census polygon                             |
+|                                                                                                       |
+| This script creates the input data for '2-Field-Calculations.py' in order to:                         |
+|    a) Calculate the percent coverage of each census tract                                             |
+|                                                                                                       |
+| Results from step 2 serve as the input to '3-County-Calculations.py' which:                           |
+|    a) Calculates, for any chosen census field, the county-by-county percent service area              |
+|                                                                                                       |
+| Ultimately, the utility of this tool is that users can input any coordinates of locations,            |
+| plus a maximum travel time/travel distance, and for any census variable, calculate where certain      |
+| demographics are better served or worse served.                                                       |
+|                                                                                                       |
+| The example included with these sets of scripts calculates the service area (5 miles) of all          |
+| WIC locations in New York. It then allows the user to choose census variables to rank county-wide     |
+| service by each variable. The examples included show the variable access of black and low-income      |
+| communities to WIC locations.                                                                         |
+|                                                                                                       |
+---------------------------------------------------------------------------------------------------------
 '''
 
 #Import system modules
+
 import sys,os,shutil,arcpy,string,traceback
 from arcpy import env
 from arcpy.sa import *
@@ -33,7 +51,6 @@ try:
     arcpy.CheckOutExtension("Spatial")
 
     # Set environment & output settings
-    env.workspace = "C:\Users\John\Desktop\GIS Final"
     env.overwriteOutput = True
 
     # Set input variables
@@ -47,12 +64,14 @@ try:
     outLayerFile = arcpy.GetParameterAsText(5)
     outputDissolved = arcpy.GetParameterAsText(6)
     outputJoined = arcpy.GetParameterAsText(7)
-
+    
     arcpy.AddMessage('\n' + "The network road input shapefile name is: " +NetworkRoad+'\n')
-
+    
+    # ---------------------------------------------------------------------------------------------
 
     # Build the network dataset
     arcpy.na.BuildNetwork(in_network_dataset=NetworkRoad)
+    arcpy.AddMessage('\n' + Network dataset finished)
 
     # Calculate locations of points within the network
 
@@ -92,14 +111,14 @@ try:
     # Solve the service area
     arcpy.na.Solve(outLayerName)
 
+    # ---------------------------------------------------------------------------------------------
+
     # Use arcpy mapping and the naClasses variable we defined above to create a variable
     # storing the polygons sublayer
     polygonsSubLayer = arcpy.mapping.ListLayers(FacilitiesInterim, naClasses["SAPolygons"])[0]
 
     # Copy the polygons sublayer to the disk, as a shapefile
     arcpy.CopyFeatures_management(polygonsSubLayer, outLayerFile)
-
-    # Calculate the intersection between the service area and the census layer
 
 
     # Dissolve the borders between service areas within each census polygon
@@ -109,6 +128,7 @@ try:
                                        multi_part="MULTI_PART",
                                        unsplit_lines="DISSOLVE_LINES")
 
+    # Calculate the intersection between the service area and the census layer
     intersected = arcpy.Intersect_analysis([dissolved, CensusLayer],
                                            join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
 
@@ -122,17 +142,21 @@ try:
                                                         Area_Unit="SQUARE_MILES_US",
                                                         Coordinate_System="")
 
+    Census_area = arcpy.AddGeometryAttributes_management(Input_Features = CensusLayer,
+                                                        Geometry_Properties="AREA_GEODESIC",
+                                                        Length_Unit="",
+                                                        Area_Unit="SQUARE_MILES_US",
+                                                        Coordinate_System="")
+
     # Join the layer containing the area of the dissolved polygons to the census layer
-    arcpy.SpatialJoin_analysis(target_features=CensusLayer,
+    arcpy.SpatialJoin_analysis(target_features=Census_area,
                         join_features=intersected_area,
                         out_feature_class = outputJoined,
                         join_operation="JOIN_ONE_TO_ONE",
                         join_type="KEEP_ALL",
-                        match_option="INTERSECT",
+                        match_option="CONTAINS",
                         search_radius="",
                         distance_field_name="")
-
-
 
 
     # When done, turn off the Spatial Analysis and Network Analysis Extensions

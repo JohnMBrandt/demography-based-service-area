@@ -122,13 +122,19 @@ try:
                                                         Area_Unit="SQUARE_MILES_US",
                                                         Coordinate_System="")
 
+    Census_area = arcpy.AddGeometryAttributes_management(Input_Features = CensusLayer,
+                                                        Geometry_Properties="AREA_GEODESIC",
+                                                        Length_Unit="",
+                                                        Area_Unit="SQUARE_MILES_US",
+                                                        Coordinate_System="")
+
     # Join the layer containing the area of the dissolved polygons to the census layer
-    arcpy.SpatialJoin_analysis(target_features=CensusLayer,
+    arcpy.SpatialJoin_analysis(target_features=Census_area,
                         join_features=intersected_area,
                         out_feature_class = outputJoined,
                         join_operation="JOIN_ONE_TO_ONE",
                         join_type="KEEP_ALL",
-                        match_option="INTERSECT",
+                        match_option="CONTAINS",
                         search_radius="",
                         distance_field_name="")
 

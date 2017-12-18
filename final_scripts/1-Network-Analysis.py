@@ -54,11 +54,11 @@ try:
     env.overwriteOutput = True
 
     # Set input variables
-    NetworkRoad = arcpy.GetParameterAsText(0)
-    Facility = arcpy.GetParameterAsText(1)
-    ServiceAreaRadius = arcpy.GetParameterAsText(2)
-    CensusLayer = arcpy.GetParameterAsText(3)
-    DissolveField = arcpy.GetParameterAsText(4)
+    NetworkRoad = arcpy.GetParameterAsText(0)        # Input network dataset (.lyr)
+    Facility = arcpy.GetParameterAsText(1)           # Input shapefile of facility locations
+    ServiceAreaRadius = arcpy.GetParameterAsText(2)  # Input service area radius (feet)
+    CensusLayer = arcpy.GetParameterAsText(3)        # Input census tracts layer (.shp)
+    DissolveField = arcpy.GetParameterAsText(4)      # Unique object identifier field in census layer
 
     # Set output variables
     outLayerFile = arcpy.GetParameterAsText(5)
@@ -71,16 +71,13 @@ try:
 
     # Build the network dataset
     arcpy.na.BuildNetwork(in_network_dataset=NetworkRoad)
-    arcpy.AddMessage('\n' + Network dataset finished)
-
-    # Calculate locations of points within the network
-
+    arcpy.AddMessage('\n' + "Network dataset finished")
 
     # Create a service area layer
     outLayerName = arcpy.na.MakeServiceAreaLayer(in_network_dataset=NetworkRoad,
                                 impedance_attribute="Length",
                                 travel_from_to="TRAVEL_FROM",
-                                default_break_values="20000",
+                                default_break_values=ServiceAreaRadius,
                                 polygon_type="SIMPLE_POLYS",
                                 merge="NO_MERGE",
                                 nesting_type="RINGS",
@@ -120,6 +117,7 @@ try:
     # Copy the polygons sublayer to the disk, as a shapefile
     arcpy.CopyFeatures_management(polygonsSubLayer, outLayerFile)
 
+    # ---------------------------------------------------------------------------------------------
 
     # Dissolve the borders between service areas within each census polygon
     dissolved = arcpy.Dissolve_management(in_features=outLayerFile,
@@ -128,12 +126,13 @@ try:
                                        multi_part="MULTI_PART",
                                        unsplit_lines="DISSOLVE_LINES")
 
+    # Export the dissolved shapefile to the disk
+    arcpy.CopyFeatures_management(dissolved, outputDissolved)
+
     # Calculate the intersection between the service area and the census layer
     intersected = arcpy.Intersect_analysis([dissolved, CensusLayer],
                                            join_attributes="ALL", cluster_tolerance="-1 Unknown", output_type="INPUT")
 
-    # Export the dissolved shapefile to the disk
-    arcpy.CopyFeatures_management(dissolved, outputDissolved)
 
     # Calculate the area of the dissolved polygons within each census polygon
     intersected_area = arcpy.AddGeometryAttributes_management(Input_Features = intersected,
@@ -142,6 +141,7 @@ try:
                                                         Area_Unit="SQUARE_MILES_US",
                                                         Coordinate_System="")
 
+    # Calculate the area of each census polygon
     Census_area = arcpy.AddGeometryAttributes_management(Input_Features = CensusLayer,
                                                         Geometry_Properties="AREA_GEODESIC",
                                                         Length_Unit="",

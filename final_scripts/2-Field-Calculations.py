@@ -24,7 +24,7 @@ arcpy.env.overwriteOutput = True
 try:
 
     # Set input variables
-    input_shapefile = arcpy.GetParameterAsText(0)
+    input_shapefile = arcpy.GetParameterAsText(0)   
     service_area = arcpy.GetParameterAsText(1)
     census_area = arcpy.GetParameterAsText(2)
 

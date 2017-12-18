@@ -39,8 +39,7 @@
 '''
 
 #Import system modules
-
-import sys,os,shutil,arcpy,string,traceback
+import sys, os, math, shutil, arcpy, string, traceback
 from arcpy import env
 from arcpy.sa import *
 

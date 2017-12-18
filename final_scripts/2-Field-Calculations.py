@@ -16,10 +16,10 @@
 ---------------------------------------------------------------------------------------------------------
 '''
 
-# Import packages
-import sys, math, string, arcpy, os, traceback
-
+#Import system modules
+import sys, os, math, shutil, arcpy, string, traceback
 arcpy.env.overwriteOutput = True
+
 
 try:
 

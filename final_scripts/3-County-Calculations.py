@@ -6,12 +6,12 @@
 |                                                                                                       |
 | This script takes the following inputs:                                                               |
 |                                                                                                       |
-| input_part_2  = output of Part 1, a shapefile containing areas of service area by census block        |
+| input_part_2  = output of Part 2, containing percent coverage of service area by census block group   |
 | input_census_file  = county-level shapefile                                                           |
 | 																										|
 | percent_coverage = field within input_part_2 containing percent coverage of service area              |
 | census_input_field = user-specified field within input_part_2 containing demographic data             |
-| dissolve_field = FID or unique object identifier within incput_census_file to dissolve on             |
+| dissolve_field = FID or unique object identifier within input_census_file to dissolve on             |
 | 																										|
 | total_serve_output = output field containing total number of served peoples of chosen demographic     |
 | percent_serve_output = output field containing the percentage of people in demographic in county 		|
@@ -23,14 +23,12 @@
 
 '''
 
-
-
-import sys, math, string, arcpy, os, traceback
-
+#Import system modules
+import sys, os, math, shutil, arcpy, string, traceback
 arcpy.env.overwriteOutput = True
 
-try:
 
+try:
 
     # Set input files
     input_part_2         = arcpy.GetParameterAsText(0) # input shapefile
@@ -104,7 +102,7 @@ try:
         serv_value = record.getValue(serviced)     # get the value of the serviced population
         tot_value = record.getValue(total)         # get the value of the total population
         result = serv_value/tot_value              # calculate the percent of population served
-        
+
         record.setValue(percent_serve_output, result)
         ShpRecords.updateRow(record)
 

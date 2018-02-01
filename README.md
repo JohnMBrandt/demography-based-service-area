@@ -26,7 +26,6 @@ The workflow is as follows:
 * Extrapolate percent coverage to percent of demographic group served
 * Optionally, extrapolate to larger census group
 
-![alt text](http://url/to/img.png)
 
 # Example results
 
